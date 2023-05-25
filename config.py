@@ -20,7 +20,7 @@ class GCPNative:
 @dataclass
 class Environment:
     name: str
-    labels: dict[str, str]
+    labels: Optional[dict[str, str]] = None
     location: Optional[str] = None
     project: Optional[str] = None
     gcp_native: Optional[GCPNative] = None

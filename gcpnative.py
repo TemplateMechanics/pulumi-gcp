@@ -114,7 +114,7 @@ class BaseResource(ABC):
             try:
                 resource_group = await self.find(id)
             except Exception as e:
-                pulumi.log.warn(f"Failed to find existing resource group with id {id}: {e}")
+                pulumi.log.warn(f"Failed to find existing resource with id {id}: {e}")
                 return
 
         if args is not None:

@@ -1,29 +1,43 @@
-import asyncio
-from gcpnative import ResourceBuilder, BuildContext
-from config import Config
-# import pprint
+import yaml
+import pulumi
+from gcpclassic import GCPResourceBuilder
+from typing import Dict, Any
 
-def read_yaml_file():
-    with open("config.yaml") as config_yaml_file:
-        return config_yaml_file.read()
+def load_config(file_path: str) -> Dict[str, Any]:
+    """Load and validate YAML configuration from the given file path."""
+    with open(file_path, "r") as file:
+        config_data = yaml.safe_load(file)
+    
+    # For GCP, ensure required keys exist: team, service, environment, and region.
+    required_keys = ["team", "service", "environment", "region"]
+    for key in required_keys:
+        if key not in config_data:
+            raise ValueError(f"Missing required configuration key: {key}")
+    
+    return config_data
 
-async def main():
+def main():
+    # Load YAML configuration.
+    config_data = load_config("config.yaml")
 
-    read_yaml : str = read_yaml_file()
-    parsed_yaml : Config = Config.from_yaml(read_yaml)
+    try:
+        builder = GCPResourceBuilder(config_data)
+    except Exception as e:
+        pulumi.log.error(f"Failed to initialize GCPResourceBuilder: {e}")
+        raise
 
-    # pprint.pprint(parsed_yaml)
+    try:
+        builder.build()
+    except Exception as e:
+        pulumi.log.error(f"Failed during resource build: {e}")
+        raise
 
-    # Iterate through the teams, services, and environments in the YAML configuration
-    # Each environment will contain configurations for different modules in the Pulumi Registry
-    for team in parsed_yaml.teams:
-        for service in team.services:
-            for environment in service.environments:
-
-                # AzureNative
-                context = BuildContext(team.name, service.name, environment.name, environment.location, environment.project, environment.labels or {})
-                builder = ResourceBuilder(context)
-                await builder.build(environment.gcp_native)
+    # Export resource IDs if available.
+    for name, resource in builder.resources.items():
+        try:
+            pulumi.export(name, resource.id)
+        except Exception as e:
+            pulumi.log.warn(f"Failed to export resource '{name}': {e}")
 
 if __name__ == "__main__":
-    asyncio.ensure_future(main())
+    main()

@@ -1,38 +1,22 @@
-from dataclass_wizard import YAMLWizard, asdict
-from typing import Dict, Any, Sequence ,Optional, List
-from dataclasses import dataclass, field
+"""
+This module defines the data structures for our GCP YAML-Based Infrastructure Builder.
+These dataclasses provide a schema for configuration and can be extended for validation or IDE support.
+"""
+
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Any
+
 @dataclass
-class BucketArgs:
-    name: Optional[str] = None
-    location: Optional[str] = None
-    project: Optional[str] = None
-    labels: Optional[dict[str, str]] = None
-@dataclass
-class Buckets:
+class GCPResource:
     name: str
-    id: Optional[str] = None
-    args: Optional[BucketArgs] = None
-### https://www.pulumi.com/registry/packages/google-native/api-docs/storage/v1/bucket/ ###
+    type: str
+    args: Dict[str, Any]
+
 @dataclass
-class GCPNative:
-    buckets: Optional[List[Buckets]] = None
-### https://www.pulumi.com/registry/packages/google-native/ ###
-@dataclass
-class Environment:
-    name: str
-    labels: Optional[dict[str, str]] = None
-    location: Optional[str] = None
-    project: Optional[str] = None
-    gcp_native: Optional[GCPNative] = None
-@dataclass
-class Service:
-    name: str
-    environments: List[Environment]
-@dataclass
-class Team:
-    name: str
-    services: List[Service]
-@dataclass
-class Config(YAMLWizard):
-    teams: List[Team]
-### Base Config ###
+class Config:
+    team: str
+    service: str
+    environment: str
+    region: str
+    labels: Optional[Dict[str, str]] = None
+    gcp_resources: Optional[List[GCPResource]] = None
